@@ -5,8 +5,31 @@
     font-family: 'Roboto', sans-serif;
 }
 
+.App{
+    height: 90vh !important;
+    display: flex;
+    flex-direction: column;
+}
+
 .map{
     width: 100vw;
     height: 70vh;
 }
+
+.leaflet-tooltip{
+    background-color: black !important;
+    border: none !important;
+    color: white !important;
+    padding: 5px !important;
+}
+
+.basic-single{
+    padding: 16px;
+}
+
+.marker-top{
+    z-index: 100000 !important;
+}
+
+
 
