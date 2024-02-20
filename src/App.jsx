@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState , useEffect } from 'react';
 import './App.css';
 import LiveMap from './Components/LiveMap';
 import Navbar from './Components/Navbar';
 import Select from 'react-select';
+import useWebSocket  from 'react-use-websocket';
 // import { colourOptions } from '../data';
 
 const options=[
@@ -19,12 +20,30 @@ const options=[
 ]
 
 function App() {
+  const [liveTs,setLiveTs] = useState(0);
+  const [socketUrl, setSocketUrl] = useState('wss://bw07.kaatru.org/');
+  const { sendMessage, lastMessage, readyState } = useWebSocket(socketUrl,{
+    onMessage:(e)=>{
+      console.log(JSON.parse(e.data))
+      let data = JSON.parse(e.data)
+      if(data.dID === "SG10"){
+        console.log(data.dTS)
+        setLiveTs(data.dTS)
+      }
+    }
+  });
+  // console.log(JSON.parse(lastMessage.data))
+  console.log(lastMessage)
+  // useEffect(()=>{
+  //   if(lastMessage.dat)
+  // },[lastMessage])
   const [value,setValue]=useState(options[0]);
   const [route,setRoute]=useState(0);
   console.log(route)
   return (
     <div className="App">
       <Navbar/>
+      <h1 className='timestamp'>{liveTs}</h1>
       <LiveMap route={route}/>
       <div className="flex flex-col flex-auto justify-between">
         <Select
