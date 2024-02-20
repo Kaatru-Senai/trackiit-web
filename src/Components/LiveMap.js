@@ -505,37 +505,62 @@ function LiveMap({route}) {
       isPassed: false,
       stopName: "Velachery Gate",
     },
+    {
+      latlong: [12.986434, 80.239792],
+      isPassed: true,
+      stopName: "Mandakani Hostel",
+    },
+    {
+      latlong: [12.986680, 80.237957],
+      isPassed: true,
+      stopName: "Taramani Bus stop",
+    },
+    {
+      latlong: [12.986126, 80.234351],
+      isPassed: true,
+      stopName: "Narmada Hostel",
+    },
+    {
+      latlong: [12.986794, 80.233264],
+      isPassed: true,
+      stopName: "IIT GYMKHANA",
+    },
+    {
+      latlong: [12.989283, 80.232952],
+      isPassed: true,
+      stopName: "OAT",
+    },
   ]);
   console.log(route)
   const [stops2, setStops2] = useState([
     {
       latlong: [12.986434, 80.239792],
-      isPassed: false,
+      isPassed: true,
       stopName: "Mandakani Hostel",
     },
     {
       latlong: [12.986680, 80.237957],
-      isPassed: false,
+      isPassed: true,
       stopName: "Taramani Bus stop",
     },
     {
       latlong: [12.986126, 80.234351],
-      isPassed: false,
+      isPassed: true,
       stopName: "Narmada Hostel",
     },
     {
       latlong: [12.986794, 80.233264],
-      isPassed: false,
+      isPassed: true,
       stopName: "IIT GYMKHANA",
     },
     {
       latlong: [12.989283, 80.232952],
-      isPassed: false,
+      isPassed: true,
       stopName: "OAT",
     },
     {
       latlong: [12.991358, 80.233674],
-      isPassed: false,
+      isPassed: true,
       stopName: "GC",
     },
     {
@@ -563,7 +588,7 @@ function LiveMap({route}) {
   const [mapCenter, setMapCenter] = useState([12.994958, 80.236598]);
   const [completedRoute, setCompletedRoute] = useState([]);
   const [bus1, setBus1] = useState([]);
-  const [bus2, setBus2] = useState([]);
+  // const [bus2, setBus2] = useState([]);
   let BusIcon = L.icon({
     iconUrl: busIcon,
     iconRetinaUrl: busIcon,
@@ -580,8 +605,7 @@ function LiveMap({route}) {
     iconSize: [25, 25],
   });
 
-  let i = 0,
-    counter = 0;
+  let i = 0,counter = 0;
 
   const getBus1Data = async () => {
     const currentPoint = await data(i);
@@ -665,7 +689,7 @@ function LiveMap({route}) {
     //   mapRef.current.flyTo(currentPoint, 15);
     // }
     setMapZoom(currentZoom);
-    setBus2(currentPoint);
+    // setBus2(currentPoint);
     setMapCenter(currentPoint);
     setCompletedRoute((prevCompletedRoute) => [
       ...prevCompletedRoute,
@@ -676,7 +700,7 @@ function LiveMap({route}) {
   useEffect(() => {
     const intervalId = setInterval(()=>{
       getBus1Data();
-      getBus2Data();
+      // getBus2Data();
     },5000);
     return () => clearInterval(intervalId);
   }, []);
@@ -699,24 +723,25 @@ function LiveMap({route}) {
       setStops(updatedStops);
     }
   }, [bus1]);
-  useEffect(() => {
-    if (bus2.length !== 0) {
-      const updatedStops = stops2.map((item) => {
-        if (
-          geolib.isPointWithinRadius(
-            { latitude: bus2[0], longitude: bus2[1] },
-            { latitude: item.latlong[0], longitude: item.latlong[1] },
-            50
-          )
-        ) {
-          return { ...item, isPassed: true }; // Update isPassed property for matched stop
-        } else {
-          return item; // Keep other stops unchanged
-        }
-      });
-      setStops2(updatedStops);
-    }
-  }, [bus2]);
+
+  // useEffect(() => {
+  //   if (bus2.length !== 0) {
+  //     const updatedStops = stops2.map((item) => {
+  //       if (
+  //         geolib.isPointWithinRadius(
+  //           { latitude: bus2[0], longitude: bus2[1] },
+  //           { latitude: item.latlong[0], longitude: item.latlong[1] },
+  //           50
+  //         )
+  //       ) {
+  //         return { ...item, isPassed: true }; // Update isPassed property for matched stop
+  //       } else {
+  //         return item; // Keep other stops unchanged
+  //       }
+  //     });
+  //     setStops2(updatedStops);
+  //   }
+  // }, [bus2]);
 
   // console.log(bus1[0]);
   return (
@@ -734,18 +759,8 @@ function LiveMap({route}) {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
           />
-            {/* <Polyline positions={polylineCoords} color="blue" />
-            <Polyline positions={taramaniRoute} color="blue" /> */}
-
           {bus1.length !== 0 && (
             <Marker position={bus1} icon={BusIcon} className="marker-top">
-              <Popup>
-                A pretty CSS3 popup. <br /> Easily customizable.
-              </Popup>
-            </Marker>
-          )}
-          {bus2.length !== 0 && (
-            <Marker position={bus2} icon={BusIcon} className="marker-top">
               <Popup>
                 A pretty CSS3 popup. <br /> Easily customizable.
               </Popup>
@@ -759,39 +774,14 @@ function LiveMap({route}) {
                   position={item.latlong}
                   icon={item.isPassed ? PassedStop : UpcomingStop}
                 >
-                  <Tooltip permanent>
-                    <p
-                      className={
+                  <Popup className={
                         item.isPassed ? "passed_stop" : "upcoming-stop"
-                      }
-                    >
-                      {item.stopName}
-                    </p>
-                  </Tooltip>
+                      }>
+                {item.stopName}
+                </Popup>
                 </Marker>
               );
-            })}
-            {(bus2.length !== 0 && route===2)  &&
-            stops2.map((item) => {
-              return (
-                <Marker
-                  key={item.latlong}
-                  position={item.latlong}
-                  icon={item.isPassed ? PassedStop : UpcomingStop}
-                >
-                  <Tooltip permanent>
-                    <p
-                      className={
-                        item.isPassed ? "passed_stop" : "upcoming-stop"
-                      }
-                    >
-                      {item.stopName}
-                    </p>
-                  </Tooltip>
-                </Marker>
-              );
-            })}
-          {/* <Polyline positions={completedRoute} color="red" weight={5}/> */}
+          })};
         </MapContainer>
       </div>
     </>

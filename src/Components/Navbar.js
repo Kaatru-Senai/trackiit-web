@@ -1,6 +1,6 @@
 import React from 'react'
 import IITMLogo from '../assets/iitm_logo.png'
-import KaatruLogo from '../assets/kaatru_logo.png'
+import KaatruLogo from '../assets/Frame 1s.png'
 
 function Navbar() {
   return (
@@ -12,7 +12,7 @@ function Navbar() {
             TRACKIIT
         </div>
         <div className="mr-4">
-          <img src={KaatruLogo} alt="" className='w-[150px]'/>
+          <img src={KaatruLogo} alt="" className='w-[150px] h-[50px]'/>
         </div>
     </div>
   )
