@@ -1,0 +1,19 @@
+{
+  "files": {
+    "main.css": "/trackiit-web/static/css/main.e23046ad.css",
+    "main.js": "/trackiit-web/static/js/main.a6ecb33e.js",
+    "static/js/787.34ab84c0.chunk.js": "/trackiit-web/static/js/787.34ab84c0.chunk.js",
+    "static/media/iitm_logo.png": "/trackiit-web/static/media/iitm_logo.0f073a8163e1cd09dea5.png",
+    "static/media/Frame 1s.png": "/trackiit-web/static/media/Frame 1s.093b282c1d37b2bd4ecd.png",
+    "static/media/marker-svgrepo-com (1).svg": "/trackiit-web/static/media/marker-svgrepo-com (1).d4f51a90e83a30cf52e0711c02605260.svg",
+    "static/media/marker-svgrepo-com.svg": "/trackiit-web/static/media/marker-svgrepo-com.b8fc67eaf6387ad6d2eb97803f72b6f8.svg",
+    "index.html": "/trackiit-web/index.html",
+    "main.e23046ad.css.map": "/trackiit-web/static/css/main.e23046ad.css.map",
+    "main.a6ecb33e.js.map": "/trackiit-web/static/js/main.a6ecb33e.js.map",
+    "787.34ab84c0.chunk.js.map": "/trackiit-web/static/js/787.34ab84c0.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.e23046ad.css",
+    "static/js/main.a6ecb33e.js"
+  ]
+}
