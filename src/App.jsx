@@ -21,19 +21,19 @@ const options=[
 
 function App() {
   const [liveTs,setLiveTs] = useState(0);
-  const [socketUrl, setSocketUrl] = useState('wss://bw07.kaatru.org/');
+  const [socketUrl, setSocketUrl] = useState('wss://bw06.kaatru.org/realtime?devices=SG72');
   const { sendMessage, lastMessage, readyState } = useWebSocket(socketUrl,{
     onMessage:(e)=>{
-      console.log(JSON.parse(e.data))
+      console.log(JSON.parse(e?.data))
       let data = JSON.parse(e.data)
-      if(data.dID === "SG10"){
-        console.log(data.dTS)
-        setLiveTs(data.dTS)
-      }
+      // if(data.dID === "SG72"){
+        console.log(data.data.idata[0].data.dTS)
+        setLiveTs(data.data.idata[0].data.dTS)
+      // }
     }
   });
-  // console.log(JSON.parse(lastMessage.data))
-  console.log(lastMessage)
+  // console.log(JSON.parse(lastMessage?.data))
+  console.log(lastMessage?.data)
   // useEffect(()=>{
   //   if(lastMessage.dat)
   // },[lastMessage])
