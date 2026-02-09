@@ -20,6 +20,8 @@ L.Icon.Default.mergeOptions({
 });
 
 
+
+
 const busIcon = (label) =>
   L.divIcon({
     className: "bus-marker",
@@ -80,12 +82,33 @@ const STOP_MASTER = [
 /**
  * Unique key for mapping WS data
  */
-const stopKey = (route, stop) =>
-  `${route}-${stop.name}-${stop.lat}-${stop.lon}`;
+const stopKey = (route, device, stop) =>
+  `${device}-${route}-${stop.name}-${stop.lat}-${stop.lon}`;
+
 
 function App() {
   const [liveData, setLiveData] = useState({});
   const [busPositions, setBusPositions] = useState({});
+
+  const DeviceMap = ({ device }) => {
+    const bus = busPositions[device];
+    if (!bus) return null;
+
+    return (
+      <MapContainer
+        center={[bus.lat, bus.lon]}
+        zoom={16}
+        style={{ height: "300px", width: "100%" }}
+      >
+        <TileLayer
+          attribution="&copy; OpenStreetMap"
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        <Marker position={[bus.lat, bus.lon]} />
+      </MapContainer>
+    );
+  };
+
 
   const lastMessageAt = useRef(null);
   const RouteMap = ({ route }) => {
@@ -117,6 +140,27 @@ function App() {
     );
   };
 
+  const groupLiveDataByDevice = () => {
+    const grouped = {};
+
+    Object.values(liveData).forEach((item) => {
+      if (!item.bus) return;
+
+      if (!grouped[item.bus]) {
+        grouped[item.bus] = {
+          device: item.bus,
+          route: item.route,
+          stops: []
+        };
+      }
+
+      grouped[item.bus].stops.push(item);
+    });
+
+    return Object.values(grouped);
+  };
+
+
   // WebSocket connection
   useEffect(() => {
     const ws = new WebSocket("ws://localhost:3000/client");
@@ -134,7 +178,7 @@ function App() {
         const updated = { ...prev };
 
         stops.forEach((stop) => {
-          const key = stopKey(route, stop);
+          const key = stopKey(route, device, stop);
           updated[key] = {
             ...stop,
             bus: device,
@@ -176,16 +220,14 @@ function App() {
     return () => clearInterval(timer);
   }, []);
 
-  const renderTable = (route) => {
-    const hasLiveData = Object.values(liveData).some(
-      (d) => d.route === route
-    );
-
-    if (!hasLiveData) return null;
+  const renderDeviceTable = ({ device, route, stops }) => {
+    const routeStops = STOP_MASTER.filter(s => s.route === route);
 
     return (
-      <>
-        <h2>Route {route}</h2>
+      <div key={device} style={{ marginBottom: 40 }}>
+        <h2>
+          Bus: {device} | Route: {route}
+        </h2>
 
         <div style={{ display: "flex", gap: "16px" }}>
           {/* TABLE */}
@@ -204,13 +246,17 @@ function App() {
                 </tr>
               </thead>
               <tbody>
-                {STOP_MASTER.filter(s => s.route === route).map((stop, idx) => {
-                  const key = stopKey(route, stop);
-                  const live = liveData[key];
+                {routeStops.map((stop, idx) => {
+                  const live = stops.find(
+                    s =>
+                      s.name === stop.name &&
+                      s.lat === stop.lat &&
+                      s.lon === stop.lon
+                  );
 
                   return (
-                    <tr key={`${route}-${idx}`}>
-                      <td>{live?.bus || "-"}</td>
+                    <tr key={`${device}-${idx}`}>
+                      <td>{device}</td>
                       <td>{live?.id || "-"}</td>
                       <td>{stop.name}</td>
                       <td>{live?.eta ? new Date(live.eta).toLocaleTimeString() : "-"}</td>
@@ -227,19 +273,18 @@ function App() {
 
           {/* MAP */}
           <div style={{ flex: 1 }}>
-            <RouteMap route={route} />
+            <DeviceMap device={device} />
           </div>
         </div>
-      </>
+      </div>
     );
   };
+
 
   return (
     <div style={{ padding: 20 }}>
       <h1>Live Bus Stop Status</h1>
-      {renderTable(1)}
-      <br />
-      {renderTable(2)}
+      {groupLiveDataByDevice().map(renderDeviceTable)}
     </div>
   );
 }
