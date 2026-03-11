@@ -171,11 +171,25 @@ function App() {
 
       lastMessageAt.current = Date.now();
 
-      const { route, device, stops, pos } = msg.data;
+      const { route, device, stops, pos, cog, sog } = msg.data;
 
       // update stop live data
       setLiveData((prev) => {
-        const updated = { ...prev };
+        // Check if route changed for this device
+        // We look for ANY entry for this device with a DIFFERENT route
+        const isRouteChanged = Object.values(prev).some(
+          (item) => item.bus === device && item.route !== route
+        );
+
+        let updated = { ...prev };
+
+        if (isRouteChanged) {
+          console.log(`[Frontend] Route switch detected for ${device}: Clearing old data.`);
+          // Remove all entries for this device to prevent mixing old/new route data
+          updated = Object.fromEntries(
+            Object.entries(updated).filter(([, item]) => item.bus !== device)
+          );
+        }
 
         stops.forEach((stop) => {
           const key = stopKey(route, device, stop);
@@ -189,14 +203,16 @@ function App() {
         return updated;
       });
 
-      // update live bus position
+      // update live bus position (store cog/sog too for position-only cards)
       if (pos?.length === 2) {
         setBusPositions((prev) => ({
           ...prev,
           [device]: {
             lat: pos[0],
             lon: pos[1],
-            route
+            route,
+            cog: cog ?? 0,
+            sog: sog ?? 0
           }
         }));
       }
@@ -205,7 +221,7 @@ function App() {
     return () => ws.close();
   }, []);
 
-  // 5-second inactivity watchdog
+  // 5-second inactivity watchdog — clears both liveData AND busPositions
   useEffect(() => {
     const timer = setInterval(() => {
       if (
@@ -213,6 +229,7 @@ function App() {
         Date.now() - lastMessageAt.current > 5000
       ) {
         setLiveData({});
+        setBusPositions({});
         lastMessageAt.current = null;
       }
     }, 1000);
@@ -281,9 +298,67 @@ function App() {
   };
 
 
+  // Render a minimal card for position-only buses (route === 0, no active trip)
+  const renderPositionOnlyCard = (device, bus) => {
+    return (
+      <div key={device} style={{
+        marginBottom: 32,
+        border: '2px solid #f5a623',
+        borderRadius: 10,
+        padding: '12px 20px',
+        background: '#fffbf2'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+          <span style={{
+            background: '#f5a623',
+            color: '#fff',
+            borderRadius: 6,
+            padding: '3px 10px',
+            fontWeight: 'bold',
+            fontSize: 13
+          }}>GPS ONLY</span>
+          <h2 style={{ margin: 0 }}>Bus: {device}</h2>
+          <span style={{ color: '#888', fontSize: 13 }}>No active trip — engine restarted or restricted zone</span>
+        </div>
+        <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+          <div style={{ flex: 1, fontSize: 14, color: '#555' }}>
+            <div><b>Latitude:</b> {bus.lat.toFixed(5)}</div>
+            <div><b>Longitude:</b> {bus.lon.toFixed(5)}</div>
+            {bus.cog !== undefined && <div><b>COG:</b> {bus.cog.toFixed(1)}°</div>}
+            {bus.sog !== undefined && <div><b>SOG:</b> {bus.sog.toFixed(1)} km/h</div>}
+          </div>
+          <div style={{ flex: 3 }}>
+            <MapContainer
+              key={`pos-${device}-${bus.lat}-${bus.lon}`}
+              center={[bus.lat, bus.lon]}
+              zoom={17}
+              style={{ height: '260px', width: '100%', borderRadius: 8 }}
+            >
+              <TileLayer
+                attribution="&copy; OpenStreetMap"
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              <Marker position={[bus.lat, bus.lon]} icon={busIcon(device)} />
+            </MapContainer>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Buses in position-only mode (route === 0, present in busPositions but no stop data)
+  const positionOnlyBuses = Object.entries(busPositions).filter(
+    ([, b]) => b.route === 0
+  );
+
   return (
     <div style={{ padding: 20 }}>
       <h1>Live Bus Stop Status</h1>
+
+      {/* Position-only buses (no active trip) */}
+      {positionOnlyBuses.map(([device, bus]) => renderPositionOnlyCard(device, bus))}
+
+      {/* Buses with active trips and stop data */}
       {groupLiveDataByDevice().map(renderDeviceTable)}
     </div>
   );
